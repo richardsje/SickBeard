@@ -1372,8 +1372,15 @@ class ConfigSubtitles:
 
         if use_subtitles == "on":
             use_subtitles = 1
+            sickbeard.subtitlesFinderScheduler.thread.start()
         else:
             use_subtitles = 0
+            sickbeard.subtitlesFinderScheduler.abort = True
+            logger.log(u"Waiting for the SUBTITLESFINDER thread to exit")
+            try:
+                subtitlesFinderScheduler.thread.join(5)
+            except:
+                pass
 
         if subtitles_multi == "on":
             subtitles_multi = 1
