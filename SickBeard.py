@@ -110,8 +110,8 @@ def getSystemDataDir(progdir):
             return '%s/Library/Application Support/SickBeard' % home
         else:
             return progdir
-    elif sys.platform == "win32":
-        #TODO: implement
+    else:
+        #TODO: implement for other os
         return progdir
 
 def main():
