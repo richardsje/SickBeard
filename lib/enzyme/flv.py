@@ -1,34 +1,30 @@
 # -*- coding: utf-8 -*-
-# kaa-Metadata - Media Metadata for Python
-# Copyright (C) 2003-2006 Thomas Schueppel, Dirk Meyer
+# enzyme - Video metadata parser
+# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
+# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
-# First Edition: Dirk Meyer <dischi@freevo.org>
-# Maintainer:    Dirk Meyer <dischi@freevo.org>
+# This file is part of enzyme.
 #
-# Please see the file AUTHORS for a complete list of authors.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# enzyme is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MER-
-# CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-# Public License for more details.
+# enzyme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 __all__ = ['Parser']
 
-import sys
-import struct
-import logging
-from ..exceptions import *
+from exceptions import *
 import core
+import logging
+import struct
 
 # get logging object
 log = logging.getLogger(__name__)
@@ -120,13 +116,13 @@ class FlashVideo(core.AVContainer):
                 file.seek(size - 1, 1)
 
             elif chunk[0] == FLV_TAG_TYPE_META:
-                log.info('metadata %s', str(chunk))
+                log.info(u'metadata %r', str(chunk))
                 metadata = file.read(size)
                 try:
                     while metadata:
                         length, value = self._parse_value(metadata)
                         if isinstance(value, dict):
-                            log.info('metadata: %s', value)
+                            log.info(u'metadata: %r', value)
                             if value.get('creator'):
                                 self.copyright = value.get('creator')
                             if value.get('width'):
@@ -143,7 +139,7 @@ class FlashVideo(core.AVContainer):
                 except (IndexError, struct.error, TypeError):
                     pass
             else:
-                log.info('unkown %s', str(chunk))
+                log.info(u'unkown %r', str(chunk))
                 file.seek(size, 1)
 
             file.seek(4, 1)
@@ -179,7 +175,7 @@ class FlashVideo(core.AVContainer):
                 data = data[length:]
             return init_length - len(data), result
 
-        log.info('unknown code: %x. Stop metadata parser', ord(data[0]))
+        log.info(u'unknown code: %x. Stop metadata parser', ord(data[0]))
         return 0, None
 
 

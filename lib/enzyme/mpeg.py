@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-# kaa-Metadata - Media Metadata for Python
-# Copyright (C) 2003-2006 Thomas Schueppel, Dirk Meyer
+# enzyme - Video metadata parser
+# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
+# Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
+# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
-# First Edition: Thomas Schueppel <stain@acm.org>
-# Maintainer:    Dirk Meyer <dischi@freevo.org>
+# This file is part of enzyme.
 #
-# Please see the file AUTHORS for a complete list of authors.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# enzyme is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MER-
-# CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-# Public License for more details.
+# enzyme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 __all__ = ['Parser']
@@ -28,7 +26,7 @@ import os
 import struct
 import logging
 import stat
-from ..exceptions import *
+from exceptions import *
 import core
 
 # get logging object
@@ -250,7 +248,7 @@ class MPEG(core.AVContainer):
                     self._set('interlaced', True)
                 return True
             else:
-                log.debug('ext', ext)
+                log.debug(u'ext: %r' % ext)
             buffer = buffer[pos+4:]
         return False
 
@@ -583,7 +581,7 @@ class MPEG(core.AVContainer):
 
         if ptsdts and ptsdts == ord(buffer[9]) >> 4:
             if ord(buffer[9]) >> 4 != ptsdts:
-                log.warning('WARNING: bad PTS/DTS, please contact us')
+                log.warning(u'WARNING: bad PTS/DTS, please contact us')
                 return packet_length, None
 
             # timestamp = self.ReadPTS(buffer[9:14])
@@ -597,7 +595,7 @@ class MPEG(core.AVContainer):
 
 
     def isPES(self, file):
-        log.info('trying mpeg-pes scan')
+        log.info(u'trying mpeg-pes scan')
         file.seek(0,0)
         buffer = file.read(3)
 
@@ -761,7 +759,7 @@ class MPEG(core.AVContainer):
                         else:
                             # timestamp broken
                             del self.start
-                            log.warning('Timestamp error, correcting')
+                            log.warning(u'Timestamp error, correcting')
 
             if hasattr(self, 'start') and self.start and \
                    self.sequence_header_offset and self.video and self.audio:
@@ -812,7 +810,7 @@ class MPEG(core.AVContainer):
                 timestamp = self.ReadPESHeader(c+offset, buffer[c+offset:], tsid)[1]
                 if timestamp is None:
                     # this should not happen
-                    log.error('bad TS')
+                    log.error(u'bad TS')
                     return None
                 return c + offset + timestamp
             c += TS_PACKET_LENGTH
@@ -899,7 +897,7 @@ class MPEG(core.AVContainer):
             return 0
 
         file = open(self.filename)
-        log.debug('scanning file...')
+        log.debug(u'scanning file...')
         while 1:
             file.seek(self.__seek_size__ * 10, 1)
             buffer = file.read(self.__sample_size__)
@@ -908,10 +906,10 @@ class MPEG(core.AVContainer):
             pos = self.__search__(buffer)
             if pos == None:
                 continue
-            log.debug('buffer position: %s' % self.get_time(buffer[pos:]))
+            log.debug(u'buffer position: %r' % self.get_time(buffer[pos:]))
 
         file.close()
-        log.debug('done scanning file')
+        log.debug(u'done scanning file')
 
 
 Parser = MPEG

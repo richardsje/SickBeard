@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
-# kaa-Metadata - Media Metadata for Python
-#
+# enzyme - Video metadata parser
+# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
 # Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
 # Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
-# Please see the file AUTHORS for a complete list of authors.
+# This file is part of enzyme.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# enzyme is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MER-
-# CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-# Public License for more details.
+# enzyme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 
@@ -34,17 +33,19 @@ EXTENSION_DEVICE = 'device'
 EXTENSION_DIRECTORY = 'directory'
 EXTENSION_STREAM = 'stream'
 MEDIACORE = ['title', 'caption', 'comment', 'size', 'type', 'subtype', 'timestamp',
-             'keywords', 'country', 'language', 'langcode', 'url', 'media', 'artist',
+             'keywords', 'country', 'language', 'langcode', 'url', 'artist',
              'mime', 'datetime', 'tags', 'hash']
-MEDIA_AUDIO = 'MEDIA_AUDIO'
-MEDIA_VIDEO = 'MEDIA_VIDEO'
-MEDIA_IMAGE = 'MEDIA_IMAGE'
-MEDIA_AV = 'MEDIA_AV'
-MEDIA_SUBTITLE = 'MEDIA_SUBTITLE'
-MEDIA_CHAPTER = 'MEDIA_CHAPTER'
-MEDIA_DIRECTORY = 'MEDIA_DIRECTORY'
-MEDIA_DISC = 'MEDIA_DISC'
-MEDIA_GAME = 'MEDIA_GAME'
+AUDIOCORE = ['channels', 'samplerate', 'length', 'encoder', 'codec', 'format',
+             'samplebits', 'bitrate', 'fourcc', 'trackno', 'id', 'userdate',
+             'enabled', 'default', 'codec_private']
+MUSICCORE = ['trackof', 'album', 'genre', 'discs', 'thumbnail']
+VIDEOCORE = ['length', 'encoder', 'bitrate', 'samplerate', 'codec', 'format',
+             'samplebits', 'width', 'height', 'fps', 'aspect', 'trackno',
+             'fourcc', 'id', 'enabled', 'default', 'codec_private']
+AVCORE = ['length', 'encoder', 'trackno', 'trackof', 'copyright', 'product',
+          'genre', 'writer', 'producer', 'studio', 'rating', 'actors', 'thumbnail',
+          'delay', 'image', 'video', 'audio', 'subtitles', 'chapters', 'software',
+          'summary', 'synopsis', 'season', 'episode', 'series']
 
 # get logging object
 log = logging.getLogger(__name__)
@@ -138,6 +139,7 @@ class Media(object):
                 result += '|    ' + re.sub(r'\n(.)', r'\n|    \1', unicode(item))
 
         # print tables
+        #FIXME: WTH?
         if log.level >= 10:
             for name, table in self.tables.items():
                 result += '+-- Table %s\n' % str(name)
@@ -367,3 +369,90 @@ class Tags(dict, Tag):
         self.value = value
         self.langcode = langcode
         self.binary = False
+
+
+class AudioStream(Media):
+    """
+    Audio Tracks in a Multiplexed Container.
+    """
+    _keys = Media._keys + AUDIOCORE
+
+
+class Music(AudioStream):
+    """
+    Digital Music.
+    """
+    _keys = AudioStream._keys + MUSICCORE
+
+    def _finalize(self):
+        """
+        Correct same data based on specific rules
+        """
+        AudioStream._finalize(self)
+        if self.trackof:
+            try:
+                # XXX Why is this needed anyway?
+                if int(self.trackno) < 10:
+                    self.trackno = u'0%s' % int(self.trackno)
+            except (AttributeError, ValueError):
+                pass
+
+
+class VideoStream(Media):
+    """
+    Video Tracks in a Multiplexed Container.
+    """
+    _keys = Media._keys + VIDEOCORE
+
+
+class Chapter(Media):
+    """
+    Chapter in a Multiplexed Container.
+    """
+    _keys = ['enabled', 'name', 'pos', 'id']
+
+    def __init__(self, name=None, pos=0):
+        Media.__init__(self)
+        self.name = name
+        self.pos = pos
+        self.enabled = True
+
+
+class Subtitle(Media):
+    """
+    Subtitle Tracks in a Multiplexed Container.
+    """
+    _keys = ['enabled', 'default', 'langcode', 'language', 'trackno', 'title',
+             'id', 'codec']
+
+    def __init__(self, language=None):
+        Media.__init__(self)
+        self.language = language
+
+
+class AVContainer(Media):
+    """
+    Container for Audio and Video streams. This is the Container Type for
+    all media, that contain more than one stream.
+    """
+    _keys = Media._keys + AVCORE
+
+    def __init__(self):
+        Media.__init__(self)
+        self.audio = []
+        self.video = []
+        self.subtitles = []
+        self.chapters = []
+
+    def _finalize(self):
+        """
+        Correct same data based on specific rules
+        """
+        Media._finalize(self)
+        if not self.length and len(self.video) and self.video[0].length:
+            self.length = 0
+            # Length not specified for container, so use the largest length
+            # of its tracks as container length.
+            for track in self.video + self.audio:
+                if track.length:
+                    self.length = max(self.length, track.length)

@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-# kaa-Metadata - Media Metadata for Python
-# Copyright (C) 2003-2006 Thomas Schueppel, Dirk Meyer
+# enzyme - Video metadata parser
+# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
+# Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
+# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
-# First Edition: Thomas Schueppel <stain@acm.org>
-# Maintainer:    Dirk Meyer <dischi@freevo.org>
+# This file is part of enzyme.
 #
-# Please see the file AUTHORS for a complete list of authors.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# enzyme is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MER-
-# CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-# Public License for more details.
+# enzyme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 __all__ = ['Parser']
@@ -29,7 +27,7 @@ import struct
 import string
 import logging
 import time
-from ..exceptions import *
+from exceptions import *
 import core
 
 # get logging object
@@ -92,12 +90,12 @@ class Riff(core.AVContainer):
             while self._parseRIFFChunk(file):
                 pass
         except IOError:
-            log.exception('error in file, stop parsing')
+            log.exception(u'error in file, stop parsing')
 
         self._find_subtitles(file.name)
 
-        if not self.has_idx and self.media == core.MEDIA_AV:
-            log.debug('WARNING: avi has no index')
+        if not self.has_idx and isinstance(self, core.AVContainer):
+            log.debug(u'WARNING: avi has no index')
             self._set('corrupt', True)
 
 
@@ -137,7 +135,7 @@ class Riff(core.AVContainer):
           retval['dwStart'],
           retval['dwLength'] ) = v
         if retval['dwMicroSecPerFrame'] == 0:
-            log.warning("ERROR: Corrupt AVI")
+            log.warning(u'ERROR: Corrupt AVI')
             raise ParseError()
 
         return retval
@@ -146,7 +144,7 @@ class Riff(core.AVContainer):
     def _parseSTRH(self,t):
         retval = {}
         retval['fccType'] = t[0:4]
-        log.debug("_parseSTRH(%s) : %d bytes" % (retval['fccType'], len(t)))
+        log.debug(u'_parseSTRH(%r) : %d bytes' % (retval['fccType'], len(t)))
         if retval['fccType'] != 'auds':
             retval['fccHandler'] = t[4:8]
             v = struct.unpack('<IHHIIIIIIIII',t[8:52])
@@ -251,7 +249,7 @@ class Riff(core.AVContainer):
             elif key == 'strf':
                 retval[key] = self._parseSTRF(value, retval['strh'])
             else:
-                log.debug("_parseSTRL: unsupported stream tag '%s'", key)
+                log.debug(u'_parseSTRL: unsupported stream tag %r', key)
 
             i += sz
 
@@ -267,7 +265,7 @@ class Riff(core.AVContainer):
         i += 8
         value = t[i:]
         if key != 'dmlh':
-            log.debug("_parseODML: Error")
+            log.debug(u'_parseODML: Error')
 
         i += sz - 8
         return (retval, i)
@@ -442,7 +440,7 @@ class Riff(core.AVContainer):
                 i+=8
                 # in most cases this is some info stuff
                 if not key in AVIINFO.keys() and key != 'IDIT':
-                    log.debug("Unknown Key: %s, len: %d" % (key,sz))
+                    log.debug(u'Unknown Key: %r, len: %d' % (key,sz))
                 value = t[i:i+sz]
                 if key == 'ISFT':
                     # product information
@@ -468,7 +466,7 @@ class Riff(core.AVContainer):
                             except ValueError:
                                 pass
                         else:
-                            log.debug('no support for time format %s', value)
+                            log.debug(u'no support for time format %r', value)
                 i+=sz
         return retval
 
@@ -493,15 +491,15 @@ class Riff(core.AVContainer):
                 self._parseLISTmovi(size-4, file)
                 return True
             elif size > 80000:
-                log.debug('RIFF LIST "%s" too long to parse: %s bytes' % (key, size))
+                log.debug(u'RIFF LIST %r too long to parse: %r bytes' % (key, size))
                 t = file.seek(size-4,1)
                 return True
             elif size < 5:
-                log.debug('RIFF LIST "%s" too short: %s bytes' % (key, size))
+                log.debug(u'RIFF LIST %r too short: %r bytes' % (key, size))
                 return True
 
             t = file.read(size-4)
-            log.debug('parse RIFF LIST "%s": %d bytes' % (key, size))
+            log.debug(u'parse RIFF LIST %r: %d bytes' % (key, size))
             value = self._parseLIST(t)
             self.header[key] = value
             if key == 'INFO':
@@ -513,7 +511,7 @@ class Riff(core.AVContainer):
                 # no need to add this info to a table
                 pass
             else:
-                log.debug('Skipping table info %s' % key)
+                log.debug(u'Skipping table info %r' % key)
 
         elif name == 'JUNK':
             self.junkStart = file.tell() - 8
@@ -521,20 +519,19 @@ class Riff(core.AVContainer):
             file.seek(size, 1)
         elif name == 'idx1':
             self.has_idx = True
-            log.debug('idx1: %s bytes' % size)
+            log.debug(u'idx1: %r bytes' % size)
             # no need to parse this
             t = file.seek(size,1)
         elif name == 'RIFF':
-            log.debug("New RIFF chunk, extended avi [%i]" % size)
+            log.debug(u'New RIFF chunk, extended avi [%i]' % size)
             type = file.read(4)
             if type != 'AVIX':
-                log.debug("Second RIFF chunk is %s, not AVIX, skipping", type)
+                log.debug(u'Second RIFF chunk is %r, not AVIX, skipping', type)
                 file.seek(size-4, 1)
             # that's it, no new informations should be in AVIX
             return False
         elif name == 'fmt ' and size <= 50:
             # This is a wav file.
-            self.media = core.MEDIA_AUDIO
             data = file.read(size)
             fmt = struct.unpack("<HHLLHH", data[:16])
             self._set('codec', hex(fmt[0]))
@@ -560,10 +557,10 @@ class Riff(core.AVContainer):
             # check if name is something usefull at all, maybe it is no
             # avi or broken
             t = file.seek(size,1)
-            log.debug("Skipping %s [%i]" % (name,size))
+            log.debug(u'Skipping %r [%i]' % (name,size))
         else:
             # bad avi
-            log.debug("Bad or broken avi")
+            log.debug(u'Bad or broken avi')
             return False
         return True
 

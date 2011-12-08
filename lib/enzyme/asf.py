@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-# kaa-Metadata - Media Metadata for Python
-# Copyright (C) 2003-2006 Thomas Schueppel, Dirk Meyer
+# enzyme - Video metadata parser
+# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
+# Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
+# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
-# First Edition: Thomas Schueppel <stain@acm.org>
-# Maintainer:    Dirk Meyer <dischi@freevo.org>
+# This file is part of enzyme.
 #
-# Please see the file AUTHORS for a complete list of authors.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# enzyme is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MER-
-# CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-# Public License for more details.
+# enzyme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 __all__ = ['Parser']
@@ -27,9 +25,8 @@ __all__ = ['Parser']
 import struct
 import string
 import logging
-from ..exceptions import *
+from exceptions import *
 import core
-import ..audio.core as audiocore
 
 # get logging object
 log = logging.getLogger(__name__)
@@ -125,7 +122,7 @@ class Asf(core.AVContainer):
         if reserved1 != 0x01 or reserved2 != 0x02:
             raise ParseError()
 
-        log.debug("asf header size: %d / %d objects" % (objsize,objnum))
+        log.debug(u'Header size: %d / %d objects' % (objsize,objnum))
         header = file.read(objsize-30)
         for i in range(0,objnum):
             h = self._getnextheader(header)
@@ -185,7 +182,7 @@ class Asf(core.AVContainer):
             # WORD
             value = struct.unpack('<H', descriptorvalue)[0]
         else:
-            log.debug("Unknown Descriptor Type %d" % descriptortype)
+            log.debug(u'Unknown Descriptor Type %d' % descriptortype)
         return (pos,descriptorname,value)
 
 
@@ -219,7 +216,7 @@ class Asf(core.AVContainer):
             # WORD
             value = struct.unpack('<H', descriptorvalue)[0]
         else:
-            log.debug("Unknown Descriptor Type %d" % descriptortype)
+            log.debug(u'Unknown Descriptor Type %d' % descriptortype)
         return (pos,descriptorname,value,strno)
 
 
@@ -228,7 +225,7 @@ class Asf(core.AVContainer):
         (guidstr,objsize) = r
         guid = self._parseguid(guidstr)
         if guid == GUIDS['ASF_File_Properties_Object']:
-            log.debug("File Properties Object")
+            log.debug(u'File Properties Object')
             val = struct.unpack('<16s6Q4I',s[24:24+80])
             (fileid, size, date, packetcount, duration, \
              senddur, preroll, flags, minpack, maxpack, maxbr) = \
@@ -237,7 +234,7 @@ class Asf(core.AVContainer):
             self.length = duration/10000000.0
 
         elif guid == GUIDS['ASF_Stream_Properties_Object']:
-            log.debug("Stream Properties Object [%d]" % objsize)
+            log.debug(u'Stream Properties Object [%d]' % objsize)
             streamtype = self._parseguid(s[24:40])
             errortype = self._parseguid(s[40:56])
             offset, typelen, errorlen, flags = struct.unpack('<QIIH', s[56:74])
@@ -274,24 +271,24 @@ class Asf(core.AVContainer):
             self._apply_extinfo(streamid)
 
         elif guid == GUIDS['ASF_Header_Extension_Object']:
-            log.debug("ASF_Header_Extension_Object %d" % objsize)
+            log.debug(u'ASF_Header_Extension_Object %d' % objsize)
             size = struct.unpack('<I',s[42:46])[0]
             data = s[46:46+size]
             while len(data):
-                log.debug("Sub:")
+                log.debug(u'Sub:')
                 h = self._getnextheader(data)
                 data = data[h[1]:]
 
         elif guid == GUIDS['ASF_Codec_List_Object']:
-            log.debug("List Object")
+            log.debug(u'List Object')
             pass
 
         elif guid == GUIDS['ASF_Error_Correction_Object']:
-            log.debug("Error Correction")
+            log.debug(u'Error Correction')
             pass
 
         elif guid == GUIDS['ASF_Content_Description_Object']:
-            log.debug("Content Description Object")
+            log.debug(u'Content Description Object')
             val = struct.unpack('<5H', s[24:24+10])
             pos = 34
             strings = []
@@ -340,7 +337,7 @@ class Asf(core.AVContainer):
                 idlen = struct.unpack('<B', s[pos:pos+1])[0]
                 idstring = s[pos+1:pos+1+idlen]
                 idstring = unicode(idstring, 'utf-16').replace('\0', '')
-                log.debug("Language: %d/%d: %s" % (i+1, count, idstring))
+                log.debug(u'Language: %d/%d: %r' % (i+1, count, idstring))
                 self._languages.append(idstring)
                 pos += 1+idlen
 
@@ -359,20 +356,20 @@ class Asf(core.AVContainer):
             # Just print the type:
             for h in GUIDS.keys():
                 if GUIDS[h] == guid:
-                    log.debug("Unparsed %s [%d]" % (h,objsize))
+                    log.debug(u'Unparsed %r [%d]' % (h,objsize))
                     break
             else:
                 u = "%.8X-%.4X-%.4X-%.2X%.2X-%s" % guid
-                log.debug("unknown: len=%d [%d]" % (len(u), objsize))
+                log.debug(u'unknown: len=%d [%d]' % (len(u), objsize))
         return r
 
 
-class AsfAudio(audiocore.Audio):
+class AsfAudio(core.AudioStream):
     """
     ASF audio parser for wma files.
     """
     def __init__(self):
-        audiocore.Audio.__init__(self)
+        core.AudioStream.__init__(self)
         self.mime = 'audio/x-ms-asf'
         self.type = 'asf format'
 

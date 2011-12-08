@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-# kaa-Metadata - Media Metadata for Python
-# Copyright (C) 2003-2006 Thomas Schueppel, Dirk Meyer
+# enzyme - Video metadata parser
+# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
+# Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
+# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
-# First Edition: Thomas Schueppel <stain@acm.org>
-# Maintainer:    Dirk Meyer <dischi@freevo.org>
+# This file is part of enzyme.
 #
-# Please see the file AUTHORS for a complete list of authors.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# enzyme is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MER-
-# CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-# Public License for more details.
+# enzyme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 __all__ = ['Parser']
@@ -29,7 +27,7 @@ import re
 import stat
 import os
 import logging
-from ..exceptions import *
+from exceptions import *
 import core
 
 # get logging object
@@ -155,15 +153,15 @@ class Ogm(core.AVContainer):
             # Regular File end
             return None, None
         elif len(h) < 27:
-            log.debug("%d Bytes of Garbage found after End." % len(h))
+            log.debug(u'%d Bytes of Garbage found after End.' % len(h))
             return None, None
         if h[:4] != "OggS":
-            log.debug("Invalid Ogg")
+            log.debug(u'Invalid Ogg')
             raise ParseError()
 
         version = ord(h[4])
         if version != 0:
-            log.debug("Unsupported OGG/OGM Version %d." % version)
+            log.debug(u'Unsupported OGG/OGM Version %d' % version)
             return None, None
 
         head = struct.unpack('<BQIIIB', h[5:])
@@ -278,7 +276,7 @@ class Ogm(core.AVContainer):
                 (type, ssize, timeunit, ai.samplerate, ai.length, buffersize, \
                  ai.bitrate, ai.channels, bloc, ai.bitrate) = streamheader
                 self.samplerate = ai.samplerate
-                log.debug("Samplerate %d" % self.samplerate)
+                log.debug(u'Samplerate %d' % self.samplerate)
                 self.audio.append(ai)
                 self.all_streams.append(ai)
 
@@ -289,7 +287,7 @@ class Ogm(core.AVContainer):
                 self.all_streams.append(subtitle)
 
         else:
-            log.debug("Unknown Header")
+            log.debug(u'Unknown Header')
 
 
     def _extractHeaderString(self,header):
