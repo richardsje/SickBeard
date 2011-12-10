@@ -20,7 +20,8 @@ import urllib, ConfigParser
 from distutils.core import setup
 import zipfile, fnmatch
 from lib.pygithub import github
-
+# this is for the sublimnial support its the same as in SickBeard.py
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'lib')))
 
 ######################
 # helper functions
