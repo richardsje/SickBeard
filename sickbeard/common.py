@@ -59,9 +59,10 @@ class Quality:
     SDTV = 1
     SDDVD = 1<<1 # 2
     HDTV = 1<<2 # 4
-    HDWEBDL = 1<<3 # 8
+    HDWEBDL = 1<<3 #8
     HDBLURAY = 1<<4 # 16
-    FULLHDBLURAY = 1<<5 # 32
+    FULLHDWEBDL = 1<<5 # 32
+    FULLHDBLURAY = 1<<6 # 64
 
     # put these bits at the other end of the spectrum, far enough out that they shouldn't interfere
     UNKNOWN = 1<<15
@@ -73,6 +74,7 @@ class Quality:
                       HDTV: "HD TV",
                       HDWEBDL: "720p WEB-DL",
                       HDBLURAY: "720p BluRay",
+                      FULLHDWEBDL: "1080p WEB-DL",
                       FULLHDBLURAY: "1080p BluRay"}
 
     statusPrefixes = {DOWNLOADED: "Downloaded",
@@ -131,9 +133,11 @@ class Quality:
         elif checkName(["720p", "hdtv", "x264"], all) or checkName(["hr.ws.pdtv.x264"], any):
             return Quality.HDTV
         elif checkName(["720p", "web.dl"], all) or checkName(["720p", "itunes", "h.?264"], all):
-            return Quality.HDWEBDL
+            return Quality.HDWEBDL             
         elif checkName(["720p", "bluray", "x264"], all) or checkName(["720p", "hddvd", "x264"], all):
             return Quality.HDBLURAY
+        elif checkName(["1080p", "web.dl"], all) or checkName(["1080p", "itunes", "h.?264"], all):
+            return Quality.FULLHDWEBDL           
         elif checkName(["1080p", "bluray", "x264"], all) or checkName(["1080p", "hddvd", "x264"], all):
             return Quality.FULLHDBLURAY
         else:
